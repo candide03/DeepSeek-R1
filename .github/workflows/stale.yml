@@ -1,30 +1,60 @@
-name: "Mark and close stale issues"
+name: "Manage Stale Issues and Pull Requests"
+
+# Déclencheurs du workflow
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Permet un déclenchement manuel
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 0 * * *" # Exécution quotidienne à minuit UTC
+
+# Permissions nécessaires pour interagir avec les issues et PRs
+permissions:
+  issues: write
+  pull-requests: write
 
 jobs:
   stale:
+    # Condition : s'exécute uniquement pour un dépôt spécifique
     if: ${{ github.repository == 'deepseek-ai/DeepSeek-R1' }}
     runs-on: ubuntu-latest
     steps:
-      - name: "Mark and close stale issues"
+      - name: "Mark and Close Stale Issues and PRs"
         uses: actions/stale@v9
         with:
-          days-before-issue-stale: 30
-          days-before-issue-close: 14
-          stale-issue-label: "stale"
-          close-issue-label: "closed-as-stale"
+          # Gestion des issues
+          days-before-issue-stale: 30 # Marque une issue comme stale après 30 jours d'inactivité
+          days-before-issue-close: 14 # Ferme une issue stale après 14 jours supplémentaires
+          stale-issue-label: "stale" # Étiquette pour les issues marquées comme stale
+          close-issue-label: "closed-as-stale" # Étiquette pour les issues fermées
           exempt-issue-labels: |
             pinned
             security
+            in-progress
           stale-issue-message: >
-            This issue has been automatically marked as stale because it has not had
-            recent activity. It will be closed if no further activity occurs. If you
-            believe this issue is still relevant, please leave a comment to keep it open.
-            Thank you for your contributions!
-          close-issue-message: false
-          days-before-pr-stale: -1
-          days-before-pr-close: -1
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+            This issue has been automatically marked as stale due to inactivity for 30 days. 
+            It will be closed in 14 days if no further activity occurs. 
+            Please comment or update to keep it open. Thank you!
+          close-issue-message: >
+            This issue has been automatically closed due to inactivity. 
+            Please reopen if you believe it is still relevant.
+
+          # Gestion des pull requests
+          days-before-pr-stale: 45 # Marque une PR comme stale après 45 jours d'inactivité
+          days-before-pr-close: 10 # Ferme une PR stale après 10 jours supplémentaires
+          stale-pr-label: "stale-pr" # Étiquette pour les PRs marquées comme stale
+          close-pr-label: "closed-as-stale" # Étiquette pour les PRs fermées
+          exempt-pr-labels: |
+            pinned
+            security
+            needs-review
+          stale-pr-message: >
+            This pull request has been marked as stale due to inactivity for 45 days. 
+            It will be closed in 10 days if no further activity occurs. 
+            Please update or comment to keep it open.
+          close-pr-message: >
+            This pull request has been automatically closed due to inactivity. 
+            Feel free to reopen or submit a new PR if needed.
+
+          # Autres configurations
+          repo-token: ${{ secrets.GITHUB_TOKEN }} # Jeton pour authentification
+          operations-per-run: 100 # Limite le nombre d'opérations par exécution pour éviter les abus
+          ascending: true # Traite les issues/PRs dans l'ordre chronologique (plus anciennes d'abord)
